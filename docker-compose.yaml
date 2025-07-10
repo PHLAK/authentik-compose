@@ -1,0 +1,75 @@
+services:
+
+  server:
+    # container_name: authentik-server
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION:-latest}
+    command: server
+    depends_on: [database, cache]
+    env_file: environment.d/authentik.env
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_POSTGRESQL__HOST: database
+      AUTHENTIK_POSTGRESQL__USER: ${DATABASE_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${DATABASE_PASSWORD}
+      AUTHENTIK_POSTGRESQL__NAME: ${DATABSE_DB:-authentik}
+      AUTHENTIK_REDIS__HOST: cache
+    ports:
+      - ${AUTHENTIK_PORT_HTTP:-9000}:9000
+      - ${AUTHENTIK_PORT_HTTPS:-9443}:9443
+    volumes:
+      - ${AUTHENTIK_MEDIA_VOLUME:-authentik-media}:/media
+      - ${AUTHENTIK_TEMPLATES_VOLUME:-authentik-templates}:/templates
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
+    restart: unless-stopped
+
+  worker:
+    # container_name: authentik-worker
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION:-latest}
+    command: worker
+    depends_on: [database, cache]
+    env_file: environment.d/authentik.env
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_POSTGRESQL__HOST: database
+      AUTHENTIK_POSTGRESQL__USER: ${DATABASE_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${DATABASE_PASSWORD}
+      AUTHENTIK_POSTGRESQL__NAME: ${DATABSE_DB:-authentik}
+      AUTHENTIK_REDIS__HOST: cache
+    volumes:
+      - ${AUTHENTIK_MEDIA_VOLUME:-authentik-media}:/media
+      - ${AUTHENTIK_TEMPLATES_VOLUME:-authentik-templates}:/templates
+      - ${AUTHENTIK_CERTS_VOLUME:-authentik-certs}:/certs
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+        
+  database:
+    image: postgres:${POSTGRES_VERSION:-17}
+    env_file: environment.d/database.env
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-authentik}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABSE_DB:-authentik}
+    volumes:
+      - ${POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
+    restart: unless-stopped
+  
+  cache:
+    image: valkey/valkey:${VALKEY_VERSION:-8}
+    volumes:
+      - ${VALKEY_VOLUME:-valkey-data}:/data
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
+    restart: unless-stopped
+
+volumes:
+  authentik-media: {}
+  authentik-templates: {}
+  authentik-certs: {}
+  postgres-data: {}
+  valkey-data: {}
