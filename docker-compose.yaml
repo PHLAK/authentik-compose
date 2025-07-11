@@ -17,7 +17,7 @@ services:
       - ${AUTHENTIK_PORT_HTTP:-9000}:9000
       - ${AUTHENTIK_PORT_HTTPS:-9443}:9443
     volumes:
-      - ${AUTHENTIK_MEDIA_VOLUME:-authentik-media}:/media
+      - ${AUTHENTIK_MEDIA_VOLUME:-./volumes/media}:/media
       - ${AUTHENTIK_TEMPLATES_VOLUME:-authentik-templates}:/templates
       - /etc/localtime:/etc/localtime:ro
     labels:
@@ -38,7 +38,7 @@ services:
       AUTHENTIK_POSTGRESQL__NAME: ${DATABSE_DB:-authentik}
       AUTHENTIK_REDIS__HOST: cache
     volumes:
-      - ${AUTHENTIK_MEDIA_VOLUME:-authentik-media}:/media
+      - ${AUTHENTIK_MEDIA_VOLUME:-./volumes/media}:/media
       - ${AUTHENTIK_TEMPLATES_VOLUME:-authentik-templates}:/templates
       - ${AUTHENTIK_CERTS_VOLUME:-authentik-certs}:/certs
       - /etc/localtime:/etc/localtime:ro
@@ -54,6 +54,8 @@ services:
     volumes:
       - ${POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: pg_isready -d ${DATABASE_NAME:-authentik} -U ${DATABASE_USER:-authentik}
     labels:
       com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
     restart: unless-stopped
@@ -63,12 +65,41 @@ services:
     volumes:
       - ${VALKEY_VOLUME:-valkey-data}:/data
       - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: redis-cli ping || exit 1
+    labels:
+      com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
+    restart: unless-stopped
+  
+  database-backups:
+    image: prodrigestivill/postgres-backup-local:${POSTGRES_BACKUP_VERSION:-latest}
+    env_file: environment.d/database-backups.env
+    environment:
+      POSTGRES_HOST: ${DATABASE_HOST:-database}
+      POSTGRES_DB: ${DATABASE_NAME:-authentik}
+      POSTGRES_USER: ${DATABASE_USER:-authentik}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_EXTRA_OPTS: '--clean --if-exists'
+      BACKUP_DIR: /backups
+    volumes:
+      - ${DATABASE_BACKUPS_PATH:-./volumes/backups}:/backups
+      - /etc/localtime:/etc/localtime:ro
+    depends_on: [database]
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower:${WATCHTOWER_VERSION:-latest}
+    env_file: environment.d/watchtower.env
+    environment:
+      WATCHTOWER_SCOPE: ${COMPOSE_PROJECT_NAME}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
     labels:
       com.centurylinklabs.watchtower.scope: ${COMPOSE_PROJECT_NAME}
     restart: unless-stopped
 
 volumes:
-  authentik-media: {}
   authentik-templates: {}
   authentik-certs: {}
   postgres-data: {}

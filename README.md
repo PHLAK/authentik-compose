@@ -25,3 +25,14 @@ Installation
   5. Run `docker compose config` to validate and confirm your configuration
 
   6. Run `docker compose up -d` to start the containers
+
+Updating
+--------
+
+  1. Fetch latest file changes from the repository
+
+         git pull --ff-only
+
+  2. Pull new images and restart containers
+
+         docker compose up -d --pull
