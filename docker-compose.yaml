@@ -2,7 +2,7 @@ services:
 
   server:
     # container_name: authentik-server
-    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION:-latest}
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION}
     command: server
     depends_on: [database, cache]
     env_file: environment.d/authentik.env
@@ -26,7 +26,7 @@ services:
 
   worker:
     # container_name: authentik-worker
-    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION:-latest}
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION}
     command: worker
     depends_on: [database, cache]
     env_file: environment.d/authentik.env
