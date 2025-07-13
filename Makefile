@@ -4,4 +4,4 @@ init initialize:
 
 update:
 	@git pull --ff-only
-	@docker compose up -d --pull
+	@docker compose up --detach --pull always
