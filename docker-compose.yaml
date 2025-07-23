@@ -10,7 +10,7 @@ services:
       AUTHENTIK_POSTGRESQL__HOST: database
       AUTHENTIK_POSTGRESQL__USER: ${DATABASE_USER:-authentik}
       AUTHENTIK_POSTGRESQL__PASSWORD: ${DATABASE_PASSWORD}
-      AUTHENTIK_POSTGRESQL__NAME: ${DATABSE_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${DATABASE_DB:-authentik}
       AUTHENTIK_REDIS__HOST: cache
     ports:
       - ${AUTHENTIK_PORT_HTTP:-9000}:9000
@@ -33,7 +33,7 @@ services:
       AUTHENTIK_POSTGRESQL__HOST: database
       AUTHENTIK_POSTGRESQL__USER: ${DATABASE_USER:-authentik}
       AUTHENTIK_POSTGRESQL__PASSWORD: ${DATABASE_PASSWORD}
-      AUTHENTIK_POSTGRESQL__NAME: ${DATABSE_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${DATABASE_DB:-authentik}
       AUTHENTIK_REDIS__HOST: cache
     volumes:
       - ${AUTHENTIK_MEDIA_VOLUME:-./volumes/media}:/media
@@ -48,7 +48,7 @@ services:
     environment:
       POSTGRES_USER: ${DATABASE_USER:-authentik}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABSE_DB:-authentik}
+      POSTGRES_DB: ${DATABASE_DB:-authentik}
     volumes:
       - ${POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
